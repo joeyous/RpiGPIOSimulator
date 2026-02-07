@@ -3,8 +3,8 @@ import tkinter as tk
 import threading
 import time
 
-from .PIN import PIN
-from .TypeChecker import typeassert
+from RPiSim.PIN import PIN
+from RPiSim.TypeChecker import typeassert
 
 
 #http://www.tutorialspoint.com/python/tk_button.htm
@@ -325,7 +325,19 @@ def drawGPIOOut(gpioID):
             objBtn.configure(activebackground='DarkOliveGreen3')
             
             
-    
+def drawGPIOPWM(gpioID, duty_cycle):
+    global dictionaryPins
+    global dictionaryPinsTkinter
+
+    gpioID = str(gpioID)
+    objPin = dictionaryPins[gpioID]
+    objBtn = dictionaryPinsTkinter[gpioID]
+
+  
+    if(objPin.SetMode == "OUT"):
+        objBtn["text"] = "GPIO" + str(gpioID) + "\PWM=" + str(duty_cycle)
+        objBtn.configure(background='tan2')
+        objBtn.configure(activebackground='tan2')
     
     
 
@@ -339,11 +351,25 @@ def drawBindUpdateButtonIn(gpioID,In):
     objBtn.bind("<Button-1>", buttonClick)
     objBtn.bind("<ButtonRelease-1>", buttonClickRelease)
 
+class PWM():
+    def __init__(self, pin=12, duty_cycle=0):
+        self._pin = pin
+        self._duty_cycle = duty_cycle
+
+    def start(self, duty_cycle):
+        self._duty_cycle = duty_cycle
+        drawGPIOPWM(self._pin, self._duty_cycle)
+
+    def ChangeDutyCycle(self, duty_cycle):
+        self._duty_cycle = duty_cycle
+        drawGPIOPWM(self._pin, self._duty_cycle)
+
 
 class GPIO:
 
   
     #constants
+    UNKNOWN = -1
     LOW = 0 
     HIGH = 1
     OUT = 2
@@ -355,7 +381,8 @@ class GPIO:
 
     #flags
     setModeDone = False
-
+    
+    _pwm_list = []
     #Extra functions
     def checkModeValidator():
         if(GPIO.setModeDone == False):
@@ -373,7 +400,7 @@ class GPIO:
 
     @typeassert(bool)
     def setwarnings(flag):
-        pass
+        GPIO._setWarning = flag
 
     @typeassert(int,int,int,int)        
     def setup(channel, state, initial=-1,pull_up_down=-1):
@@ -386,7 +413,8 @@ class GPIO:
 
         #check if channel is already setup
         if str(channel) in dictionaryPins:
-            raise Exception('GPIO is already setup')
+            print("RuntimeWarning: This channel is already in use, continuing anyway.")
+            # raise Exception('GPIO is already setup')
 
         if(state == GPIO.OUT):
             #GPIO is set as output, default OUT 0
@@ -414,10 +442,36 @@ class GPIO:
             drawBindUpdateButtonIn(str(channel),objTemp.In)
             dictionaryPins[str(channel)] =objTemp
             
-            
-        
-        
-        
+    @typeassert(int)        
+    def gpio_function(channel):
+        '''
+            func = GPIO.gpio_function(pin)
+            will return a value from:
+            GPIO.IN, GPIO.OUT, GPIO.SPI, GPIO.I2C, GPIO.HARD_PWM, GPIO.SERIAL, GPIO.UNKNOWN
+                  1,        0,       41,       42,            43,          40,           -1
+        '''
+        func = -1 # GPIO.UNKNOWN
+        for p in dictionaryPins:
+            if (int(p) == channel):
+                print("Found pin %d in oins dictionary" % (channel))
+                if (dictionaryPins[p].SetMode == "OUT"):
+                    func = GPIO.OUT
+                elif (dictionaryPins[p].SetMode == "IN"):
+                    func = GPIO.IN
+                elif (dictionaryPins[p].SetMode == "HARD_PWM"): # Not Implemented
+                    func = 43
+                elif (dictionaryPins[p].SetMode == "SPI"): # Not Implemented
+                    func = 41
+                elif (dictionaryPins[p].SetMode == "SERIAL"): # Not Implemented
+                    func = 40
+                elif (dictionaryPins[p].SetMode == "I2C"): # Not Implemented
+                    func = 42
+                
+        return func
+    
+    @typeassert(int,int)
+    def PWM(channel, duty_cycle):
+        return PWM(channel, duty_cycle)
 
     @typeassert(int,int)
     def output(channel, outmode):
@@ -478,7 +532,22 @@ class GPIO:
     def cleanup():
         pass
        
-                
+if __name__ == '__main__':
+    GPIO.setwarnings(False)			#disable warnings
+    GPIO.setmode(GPIO.BCM)		#set pin numbering system
+
+    import time
+    GPIO.setup(13, GPIO.IN, initial=GPIO.HIGH) 
+    GPIO.setup(12, GPIO.OUT, initial=GPIO.HIGH) 
+    GPIO.setup(11, GPIO.OUT, initial=GPIO.HIGH)
+    # GPIO.PWM(11, 0.5)
+    GPIO.PWM(11, 50)
+    try:
+        while (True):
+            toggleButton(12)
+            time.sleep(0.1)
+    except KeyboardInterrupt:
+        GPIO.cleanup()
             
         
         

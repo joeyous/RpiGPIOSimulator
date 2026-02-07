@@ -1,4 +1,4 @@
-from EmulatorGUI import GPIO
+from RPiSim import GPIO
 #import RPi.GPIO as GPIO
 import time
 import traceback

@@ -1,2 +1,92 @@
-# rpi-gpio-simulator
-This repo fork from GPIOSimulator python package
+# GPIOSimulator
+
+This repo forked from GPIOSimulator-0.01 (https://pypi.org/project/GPIOSimulator/#files)
+This Raspberry Pi emulator simulates some of the functions used in the RPi.GPIO library (using python). The intention of this library is educational.
+
+
+## Installation
+
+The easiest way is to download the zip file and extract the files in the same working environment of your script. To use the emulator just type the following at the beginning of your script.
+
+    from EmulatorGUI import GPIO
+
+
+## Simulation
+
+This library simulates the following functions which are used in the RPi.GPIO library.
+
+    GPIO.setmode()
+    GPIO.setwarnings()
+    GPIO.setup()
+    GPIO.input()
+    GPIO.output()
+
+
+## Test Example
+
+	from EmulatorGUI import GPIO
+	#import RPi.GPIO as GPIO
+	import time
+	import traceback
+
+	def Main():
+		try:
+			GPIO.setmode(GPIO.BCM)
+
+			GPIO.setwarnings(False)
+
+			GPIO.setup(4, GPIO.OUT) 
+			GPIO.setup(17, GPIO.OUT, initial = GPIO.LOW) 
+			GPIO.setup(18, GPIO.OUT, initial = GPIO.LOW)
+			GPIO.setup(21, GPIO.OUT, initial = GPIO.LOW)
+			GPIO.setup(23, GPIO.IN, pull_up_down = GPIO.PUD_UP) 
+			GPIO.setup(15, GPIO.IN, pull_up_down = GPIO.PUD_DOWN) 
+			GPIO.setup(24, GPIO.IN, pull_up_down = GPIO.PUD_DOWN) 
+			GPIO.setup(26, GPIO.IN)
+
+			while(True):
+				if (GPIO.input(23) == False):
+					GPIO.output(4,GPIO.HIGH)
+					GPIO.output(17,GPIO.HIGH)
+					time.sleep(1)
+
+				if (GPIO.input(15) == True):
+					GPIO.output(18,GPIO.HIGH)
+					GPIO.output(21,GPIO.HIGH)
+					time.sleep(1)
+
+				if (GPIO.input(24) == True):
+					GPIO.output(18,GPIO.LOW)
+					GPIO.output(21,GPIO.LOW)
+					time.sleep(1)
+
+				if (GPIO.input(26) == True):
+					GPIO.output(4,GPIO.LOW)
+					GPIO.output(17,GPIO.LOW)
+					time.sleep(1)
+
+		except Exception as ex:
+			traceback.print_exc()
+		finally:
+			GPIO.cleanup() #this ensures a clean exit
+
+	Main()
+
+
+# Credit
+
+This project based on [Pi GPIO Emulator](https://sourceforge.net/projects/pi-gpio-emulator/).
+
+- [Roderick Vella](https://roderickvella.wordpress.com/2016/06/28/raspberry-pi-gpio-emulator/)
+- 2016
+- [Pi GPIO Emulator](https://sourceforge.net/projects/pi-gpio-emulator/)
+- This project uses base design as reference, but it changes usage and implementation.
+
+## License and copyright
+
+This library is based on work which is:  
+(c) 2016 Roderick Vella, released under Creative Commons Attribution 4.0 International Public License  
+It can be found in this repository at revision 69062b
+
+All additions made after this revision are  
+(c) 2016 Johannes Spielmann, released under AGPL-3.0+
